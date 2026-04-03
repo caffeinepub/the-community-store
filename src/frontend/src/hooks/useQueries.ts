@@ -7,10 +7,12 @@ export function useGetBooks() {
   return useQuery({
     queryKey: ["books"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       return actor.getBooks();
     },
     enabled: !!actor && !isFetching,
+    retry: 3,
+    staleTime: 0,
   });
 }
 

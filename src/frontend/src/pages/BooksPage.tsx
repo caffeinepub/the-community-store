@@ -55,9 +55,9 @@ const ROALD_DAHL_TITLES = new Set([
 ]);
 
 const SUDHA_MURTY_TITLES = new Set([
-  "Grandma's Bad Of Stories",
+  "Grandma's Bag Of Stories",
   "How I Taught My Grandmother To Read And other stories",
-  "The Daughter From A wishing Tree",
+  "The Daughter From A Wishing Tree",
   "The Magic Of the Lost Temple",
   "The Magic Of the Lost Story",
 ]);

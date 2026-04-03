@@ -14,13 +14,75 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
+  Info,
   Loader2,
   Search,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Book } from "../backend.d";
 import { useGetBooks, useSubmitRentalRequest } from "../hooks/useQueries";
+
+const CAPTAIN_UNDERPANTS_TITLES = new Set([
+  "Professor Poopypants",
+  "Bionic Booger Boy Part 2",
+  "Wicked Wedgie Woman",
+  "Plight Of The Purple Potty People",
+]);
+
+const GERONIMO_STILTON_TITLES = new Set([
+  "Kingdom Of Fantasy : The Dragon Prophecy",
+  "Kingdom Of Fantasy : The Volcano of Fire",
+  "Kingdom Of Fantasy : The Wizards Wand",
+  "It's Halloween You 'Fraidy Mouse",
+  "The Cheese Coloured Camper",
+  "The Hunt For The Golden Book",
+  "The Journey Through Time - Book 1",
+]);
+
+const ROALD_DAHL_TITLES = new Set([
+  "The BFG",
+  "The Witches",
+  "The Twits",
+  "Matilda",
+  "James and the Giant Peach",
+  "Esio Trot",
+  "The Magic Finger",
+  "Charlie and the Chocolate Factory",
+  "Charlie and the Great Glass Elevator",
+  "Going Solo",
+  "Dahlmanac Fun facts and Jokes",
+]);
+
+const SUDHA_MURTY_TITLES = new Set([
+  "Grandma's Bad Of Stories",
+  "How I Taught My Grandmother To Read And other stories",
+  "The Daughter From A wishing Tree",
+  "The Magic Of the Lost Temple",
+  "The Magic Of the Lost Story",
+]);
+
+function getSeriesLabel(book: Book): string {
+  const title = book.title.trim();
+
+  if (title.startsWith("Diary Of A Wimpy Kid")) return "Diary Of A Wimpy Kid";
+  if (title.startsWith("Demon Slayer")) return "Demon Slayer";
+  if (
+    title.startsWith("Five ") ||
+    title === "Five On A Hike Together" ||
+    title === "Five Get Into A Fix" ||
+    title === "Five Go Off In A Caravan" ||
+    title === "Five Fall Into Adventure"
+  )
+    return "Famous Five";
+  if (title.startsWith("Twinkle Digest")) return "Twinkle Comics";
+  if (CAPTAIN_UNDERPANTS_TITLES.has(title)) return "Captain Underpants";
+  if (GERONIMO_STILTON_TITLES.has(title)) return "Geronimo Stilton";
+  if (ROALD_DAHL_TITLES.has(title)) return "Roald Dahl";
+  if (SUDHA_MURTY_TITLES.has(title)) return "Sudha Murty";
+
+  return "Other";
+}
 
 function BookCard({
   book,
@@ -31,7 +93,6 @@ function BookCard({
   index: number;
   onBorrow: (book: Book) => void;
 }) {
-  const price = (Number(book.rentalPrice) / 100).toFixed(2);
   const ocidIndex = index + 1;
 
   return (
@@ -39,7 +100,7 @@ function BookCard({
       data-ocid={`books.item.${ocidIndex}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06 }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.06, 0.6) }}
       className="group flex flex-col bg-card border border-border rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden"
     >
       <div
@@ -47,12 +108,11 @@ function BookCard({
       />
 
       <div className="flex flex-col flex-1 p-6">
-        <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex-1 min-w-0">
-            <h3 className="font-display text-lg text-foreground leading-tight line-clamp-2 mb-1">
+            <h3 className="font-display text-lg text-foreground leading-tight line-clamp-2">
               {book.title}
             </h3>
-            <p className="text-sm text-muted-foreground">{book.author}</p>
           </div>
           <Badge
             variant={book.available ? "default" : "secondary"}
@@ -66,17 +126,7 @@ function BookCard({
           </Badge>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 flex-1 mb-5">
-          {book.description}
-        </p>
-
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <div>
-            <span className="text-xs text-muted-foreground uppercase tracking-wide">
-              Rental price
-            </span>
-            <div className="font-display text-xl text-foreground">${price}</div>
-          </div>
+        <div className="flex items-center justify-end pt-4 border-t border-border">
           <Button
             data-ocid="books.borrow.open_modal_button"
             onClick={() => onBorrow(book)}
@@ -253,16 +303,42 @@ export default function BooksPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const filtered = (books ?? []).filter(
-    (b) =>
-      b.title.toLowerCase().includes(search.toLowerCase()) ||
-      b.author.toLowerCase().includes(search.toLowerCase()),
+  const filtered = useMemo(
+    () =>
+      (books ?? []).filter((b) =>
+        b.title.toLowerCase().includes(search.toLowerCase()),
+      ),
+    [books, search],
   );
+
+  // When searching, show flat list; otherwise group by series
+  const groupedSeries = useMemo(() => {
+    if (search.trim()) return null;
+
+    const map = new Map<string, Book[]>();
+    for (const book of books ?? []) {
+      const series = getSeriesLabel(book);
+      if (!map.has(series)) map.set(series, []);
+      map.get(series)!.push(book);
+    }
+
+    // Sort series alphabetically, but put "Other" last
+    const sorted = Array.from(map.entries()).sort(([a], [b]) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      return a.localeCompare(b);
+    });
+
+    return sorted;
+  }, [books, search]);
 
   const handleBorrow = (book: Book) => {
     setSelectedBook(book);
     setModalOpen(true);
   };
+
+  // Running index for ocid markers across all sections
+  let globalIndex = 0;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-12">
@@ -270,7 +346,7 @@ export default function BooksPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-10"
+        className="mb-8"
       >
         <h1 className="font-display text-4xl sm:text-5xl text-foreground mb-3">
           Our Book Collection
@@ -281,11 +357,37 @@ export default function BooksPage() {
         </p>
       </motion.div>
 
+      {/* Rental Guidelines Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="mb-8 flex items-start gap-3 rounded-xl border border-amber-300/60 bg-amber-50/80 px-5 py-4 shadow-sm"
+      >
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+        <div>
+          <p className="mb-1.5 text-sm font-semibold text-amber-800 uppercase tracking-wide">
+            Rental Guidelines
+          </p>
+          <ul className="space-y-1 text-sm text-amber-900">
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+              All books must be returned in the same condition they were
+              borrowed.
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+              Rental price is a flat <strong>₹10</strong> for all books.
+            </li>
+          </ul>
+        </div>
+      </motion.div>
+
       <div className="relative max-w-sm mb-8">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           data-ocid="books.search_input"
-          placeholder="Search by title or author..."
+          placeholder="Search by title..."
           className="pl-9 rounded-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -305,8 +407,6 @@ export default function BooksPage() {
               <div className="h-1.5 bg-muted" />
               <div className="p-6 flex flex-col gap-3">
                 <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-8 w-full mt-2" />
               </div>
             </div>
@@ -342,7 +442,8 @@ export default function BooksPage() {
         </div>
       )}
 
-      {!isLoading && !isError && filtered.length > 0 && (
+      {/* Flat search results */}
+      {!isLoading && !isError && search.trim() && filtered.length > 0 && (
         <div
           data-ocid="books.list"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -357,6 +458,49 @@ export default function BooksPage() {
           ))}
         </div>
       )}
+
+      {/* Grouped by series */}
+      {!isLoading &&
+        !isError &&
+        !search.trim() &&
+        groupedSeries &&
+        groupedSeries.length > 0 && (
+          <div data-ocid="books.list" className="space-y-12">
+            {groupedSeries.map(([seriesName, seriesBooks], sIdx) => {
+              const sectionStart = globalIndex;
+              globalIndex += seriesBooks.length;
+              return (
+                <motion.section
+                  key={seriesName}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: sIdx * 0.08 }}
+                  aria-label={seriesName}
+                >
+                  <div className="flex items-center gap-4 mb-6 pb-3 border-b-2 border-primary/20">
+                    <h2 className="font-display text-2xl sm:text-3xl text-primary tracking-wide">
+                      {seriesName}
+                    </h2>
+                    <span className="text-sm text-muted-foreground font-medium">
+                      {seriesBooks.length}{" "}
+                      {seriesBooks.length === 1 ? "book" : "books"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {seriesBooks.map((book, i) => (
+                      <BookCard
+                        key={book.id.toString()}
+                        book={book}
+                        index={sectionStart + i}
+                        onBorrow={handleBorrow}
+                      />
+                    ))}
+                  </div>
+                </motion.section>
+              );
+            })}
+          </div>
+        )}
 
       <BorrowModal
         book={selectedBook}

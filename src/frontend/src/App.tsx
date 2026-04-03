@@ -8,14 +8,18 @@ import {
   createRouter,
   useLocation,
 } from "@tanstack/react-router";
+import ChatBot from "./components/ChatBot";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import AdminPage from "./pages/AdminPage";
 import BooksPage from "./pages/BooksPage";
 import HomePage from "./pages/HomePage";
 
-const rootRoute = createRootRoute({
-  component: () => (
+function RootLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname === "/admin";
+
+  return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1">
@@ -23,8 +27,13 @@ const rootRoute = createRootRoute({
       </main>
       <Footer />
       <Toaster position="top-right" richColors />
+      {!isAdmin && <ChatBot />}
     </div>
-  ),
+  );
+}
+
+const rootRoute = createRootRoute({
+  component: RootLayout,
 });
 
 const indexRoute = createRoute({

@@ -36,18 +36,25 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addBook' : ActorMethod<[string, string, string, bigint], bigint>,
+  'addBook' : ActorMethod<[string, string, string, string], bigint>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkAdminPassword' : ActorMethod<[string], boolean>,
   'getBooks' : ActorMethod<[], Array<Book>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getRentalRequests' : ActorMethod<[], Array<RentalRequest>>,
+  'getRentalRequestsWithPassword' : ActorMethod<[string], Array<RentalRequest>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'isAdminPasswordSet' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'removeBook' : ActorMethod<[string, bigint], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setAdminPassword' : ActorMethod<[string, string], boolean>,
   'submitRentalRequest' : ActorMethod<[string, string, bigint], bigint>,
-  'updateBookAvailability' : ActorMethod<[bigint, boolean], undefined>,
-  'updateRequestStatus' : ActorMethod<[bigint, RentalRequestStatus], undefined>,
+  'updateBook' : ActorMethod<[string, bigint, string, string, string, boolean], boolean>,
+  'updateRequestStatusWithPassword' : ActorMethod<
+    [string, bigint, RentalRequestStatus],
+    undefined
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

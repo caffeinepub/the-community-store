@@ -39,26 +39,38 @@ export const RentalRequest = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'addBook' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Nat], [IDL.Nat], []),
+  'addBook' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'checkAdminPassword' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'getBooks' : IDL.Func([], [IDL.Vec(Book)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getRentalRequests' : IDL.Func([], [IDL.Vec(RentalRequest)], ['query']),
+  'getRentalRequestsWithPassword' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(RentalRequest)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'isAdminPasswordSet' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'removeBook' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setAdminPassword' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
   'submitRentalRequest' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Nat],
       [IDL.Nat],
       [],
     ),
-  'updateBookAvailability' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
-  'updateRequestStatus' : IDL.Func([IDL.Nat, RentalRequestStatus], [], []),
+  'updateBook' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool], [IDL.Bool], []),
+  'updateRequestStatusWithPassword' : IDL.Func(
+      [IDL.Text, IDL.Nat, RentalRequestStatus],
+      [],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -95,30 +107,38 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'addBook' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
-        [IDL.Nat],
-        [],
-      ),
+    'addBook' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'checkAdminPassword' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'getBooks' : IDL.Func([], [IDL.Vec(Book)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getRentalRequests' : IDL.Func([], [IDL.Vec(RentalRequest)], ['query']),
+    'getRentalRequestsWithPassword' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(RentalRequest)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'isAdminPasswordSet' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'removeBook' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setAdminPassword' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
     'submitRentalRequest' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat],
         [IDL.Nat],
         [],
       ),
-    'updateBookAvailability' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
-    'updateRequestStatus' : IDL.Func([IDL.Nat, RentalRequestStatus], [], []),
+    'updateBook' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool], [IDL.Bool], []),
+    'updateRequestStatusWithPassword' : IDL.Func(
+        [IDL.Text, IDL.Nat, RentalRequestStatus],
+        [],
+        [],
+      ),
   });
 };
 

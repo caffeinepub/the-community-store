@@ -27,9 +27,4 @@ mixin (accessControlState : AccessControl.AccessControlState) {
   public query ({ caller }) func isCallerAdmin() : async Bool {
     AccessControl.isAdmin(accessControlState, caller);
   };
-
-  // Reset admin slot - accessible only via direct backend call (no auth check, protected by deploy)
-  public shared func _resetAdmin() : async () {
-    AccessControl.resetAdmin(accessControlState);
-  };
 };

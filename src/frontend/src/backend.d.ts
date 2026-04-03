@@ -38,16 +38,20 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
-    addBook(title: string, author: string, description: string, rentalPrice: bigint): Promise<bigint>;
+    addBook(password: string, title: string, author: string, description: string): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkAdminPassword(password: string): Promise<boolean>;
     getBooks(): Promise<Array<Book>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getRentalRequests(): Promise<Array<RentalRequest>>;
+    getRentalRequestsWithPassword(password: string): Promise<Array<RentalRequest>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isAdminPasswordSet(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    removeBook(password: string, id: bigint): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setAdminPassword(newPassword: string, currentPassword: string): Promise<boolean>;
     submitRentalRequest(borrowerName: string, borrowerEmail: string, bookId: bigint): Promise<bigint>;
-    updateBookAvailability(bookId: bigint, available: boolean): Promise<void>;
-    updateRequestStatus(requestId: bigint, newStatus: RentalRequestStatus): Promise<void>;
+    updateBook(password: string, id: bigint, title: string, author: string, description: string, available: boolean): Promise<boolean>;
+    updateRequestStatusWithPassword(password: string, requestId: bigint, newStatus: RentalRequestStatus): Promise<void>;
 }

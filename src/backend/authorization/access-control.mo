@@ -64,10 +64,4 @@ module {
   public func isAdmin(state : AccessControlState, caller : Principal) : Bool {
     getUserRole(state, caller) == #admin;
   };
-
-  // Reset admin: clears all roles and allows a new admin to be claimed.
-  public func resetAdmin(state : AccessControlState) {
-    state.userRoles.clear();
-    state.adminAssigned := false;
-  };
 };

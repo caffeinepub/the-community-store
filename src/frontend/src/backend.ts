@@ -121,18 +121,22 @@ export enum UserRole {
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
-    addBook(title: string, author: string, description: string, rentalPrice: bigint): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkAdminPassword(password: string): Promise<boolean>;
     getBooks(): Promise<Array<Book>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getRentalRequests(): Promise<Array<RentalRequest>>;
+    getRentalRequestsWithPassword(password: string): Promise<Array<RentalRequest>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isAdminPasswordSet(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setAdminPassword(newPassword: string, currentPassword: string): Promise<boolean>;
     submitRentalRequest(borrowerName: string, borrowerEmail: string, bookId: bigint): Promise<bigint>;
-    updateBookAvailability(bookId: bigint, available: boolean): Promise<void>;
-    updateRequestStatus(requestId: bigint, newStatus: RentalRequestStatus): Promise<void>;
+    addBook(password: string, title: string, author: string, description: string): Promise<bigint>;
+    removeBook(password: string, id: bigint): Promise<boolean>;
+    updateBook(password: string, id: bigint, title: string, author: string, description: string, available: boolean): Promise<boolean>;
+    updateRequestStatusWithPassword(password: string, requestId: bigint, newStatus: RentalRequestStatus): Promise<void>;
 }
 import type { RentalRequest as _RentalRequest, RentalRequestStatus as _RentalRequestStatus, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -151,20 +155,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addBook(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<bigint> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.addBook(arg0, arg1, arg2, arg3);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.addBook(arg0, arg1, arg2, arg3);
-            return result;
-        }
-    }
     async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
         if (this.processError) {
             try {
@@ -176,6 +166,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async checkAdminPassword(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.checkAdminPassword(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.checkAdminPassword(arg0);
             return result;
         }
     }
@@ -221,17 +225,17 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n4(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getRentalRequests(): Promise<Array<RentalRequest>> {
+    async getRentalRequestsWithPassword(arg0: string): Promise<Array<RentalRequest>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getRentalRequests();
+                const result = await this.actor.getRentalRequestsWithPassword(arg0);
                 return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getRentalRequests();
+            const result = await this.actor.getRentalRequestsWithPassword(arg0);
             return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -247,6 +251,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUserProfile(arg0);
             return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isAdminPasswordSet(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isAdminPasswordSet();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isAdminPasswordSet();
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -277,6 +295,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async setAdminPassword(arg0: string, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setAdminPassword(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setAdminPassword(arg0, arg1);
+            return result;
+        }
+    }
     async submitRentalRequest(arg0: string, arg1: string, arg2: bigint): Promise<bigint> {
         if (this.processError) {
             try {
@@ -291,31 +323,59 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateBookAvailability(arg0: bigint, arg1: boolean): Promise<void> {
+    async updateRequestStatusWithPassword(arg0: string, arg1: bigint, arg2: RentalRequestStatus): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateBookAvailability(arg0, arg1);
+                const result = await this.actor.updateRequestStatusWithPassword(arg0, arg1, to_candid_RentalRequestStatus_n11(this._uploadFile, this._downloadFile, arg2));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateBookAvailability(arg0, arg1);
+            const result = await this.actor.updateRequestStatusWithPassword(arg0, arg1, to_candid_RentalRequestStatus_n11(this._uploadFile, this._downloadFile, arg2));
             return result;
         }
     }
-    async updateRequestStatus(arg0: bigint, arg1: RentalRequestStatus): Promise<void> {
+    async addBook(arg0: string, arg1: string, arg2: string, arg3: string): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateRequestStatus(arg0, to_candid_RentalRequestStatus_n11(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.addBook(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateRequestStatus(arg0, to_candid_RentalRequestStatus_n11(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.addBook(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async removeBook(arg0: string, arg1: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeBook(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeBook(arg0, arg1);
+            return result;
+        }
+    }
+    async updateBook(arg0: string, arg1: bigint, arg2: string, arg3: string, arg4: string, arg5: boolean): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateBook(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateBook(arg0, arg1, arg2, arg3, arg4, arg5);
             return result;
         }
     }

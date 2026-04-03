@@ -1,21 +1,24 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { backendInterface } from "../backend";
 import { createActorWithConfig } from "../config";
 import { getSecretParameter } from "../utils/urlParams";
 import { useInternetIdentity } from "./useInternetIdentity";
 
 const ACTOR_QUERY_KEY = "actor";
+
 export function useActor() {
   const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
+  // Track the previous actor instance so we only invalidate when it truly changes
+  const prevActorRef = useRef<backendInterface | null>(null);
+
   const actorQuery = useQuery<backendInterface>({
-    queryKey: [ACTOR_QUERY_KEY, identity?.getPrincipal().toString()],
+    queryKey: [ACTOR_QUERY_KEY, identity?.getPrincipal().toString() ?? "anon"],
     queryFn: async () => {
       const isAuthenticated = !!identity;
 
       if (!isAuthenticated) {
-        // Return anonymous actor if not authenticated
         return await createActorWithConfig();
       }
 
@@ -30,30 +33,29 @@ export function useActor() {
       await actor._initializeAccessControlWithSecret(adminToken);
       return actor;
     },
-    // Only refetch when identity changes
+    // Actor is stable -- only recreate when identity changes
     staleTime: Number.POSITIVE_INFINITY,
-    // This will cause the actor to be recreated when the identity changes
-    enabled: true,
+    gcTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 3,
   });
 
-  // When the actor changes, invalidate dependent queries
+  // Only invalidate dependent queries when the actor instance actually changes
   useEffect(() => {
-    if (actorQuery.data) {
+    const actor = actorQuery.data;
+    if (actor && actor !== prevActorRef.current) {
+      prevActorRef.current = actor;
+      // Invalidate everything except the actor query itself so dependent
+      // queries re-fetch with the new actor.
       queryClient.invalidateQueries({
-        predicate: (query) => {
-          return !query.queryKey.includes(ACTOR_QUERY_KEY);
-        },
-      });
-      queryClient.refetchQueries({
-        predicate: (query) => {
-          return !query.queryKey.includes(ACTOR_QUERY_KEY);
-        },
+        predicate: (query) => !query.queryKey.includes(ACTOR_QUERY_KEY),
       });
     }
   }, [actorQuery.data, queryClient]);
 
   return {
-    actor: actorQuery.data || null,
+    actor: actorQuery.data ?? null,
     isFetching: actorQuery.isFetching,
   };
 }

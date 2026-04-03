@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Info,
   Loader2,
+  RefreshCw,
   Search,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -298,7 +299,7 @@ function BorrowModal({
 const SKELETON_IDS = ["sk1", "sk2", "sk3", "sk4", "sk5", "sk6"];
 
 export default function BooksPage() {
-  const { data: books, isLoading, isError } = useGetBooks();
+  const { data: books, isLoading, isError, refetch } = useGetBooks();
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -422,8 +423,17 @@ export default function BooksPage() {
           <AlertCircle className="w-10 h-10 text-destructive" />
           <p className="text-foreground font-medium">Failed to load books</p>
           <p className="text-sm text-muted-foreground">
-            Please refresh the page and try again.
+            Please try again in a moment.
           </p>
+          <Button
+            data-ocid="books.error_state"
+            onClick={() => refetch()}
+            variant="outline"
+            className="mt-2 rounded-full px-6 gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </Button>
         </div>
       )}
 

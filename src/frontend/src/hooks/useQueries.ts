@@ -3,16 +3,22 @@ import type { RentalRequestStatus } from "../backend.d";
 import { useActor } from "./useActor";
 
 export function useGetBooks() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   return useQuery({
     queryKey: ["books"],
     queryFn: async () => {
       if (!actor) throw new Error("Actor not ready");
       return actor.getBooks();
     },
-    enabled: !!actor && !isFetching,
-    retry: 3,
-    staleTime: 0,
+    enabled: !!actor,
+    // Retry aggressively -- canister may be slow to warm up
+    retry: 8,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15000),
+    // Keep data fresh but don't refetch constantly
+    staleTime: 30_000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 }
 
@@ -25,6 +31,8 @@ export function useIsAdminPasswordSet() {
       return actor.isAdminPasswordSet();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -38,6 +46,8 @@ export function useGetRentalRequests() {
       return (actor as any).getRentalRequests();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -51,6 +61,8 @@ export function useGetRentalRequestsWithPassword(password: string) {
     },
     enabled: !!actor && !isFetching && !!password,
     retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -63,6 +75,8 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 
